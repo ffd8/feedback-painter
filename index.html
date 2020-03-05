@@ -185,7 +185,7 @@
 		// cc teddavis.org 2020
 
 		let fb, drops = [],
-		scl = .09, splatter = false, clearToggle = false, guiToggle = true, bw = 255;
+		scl = .09, splatter = false, clearToggle = false, guiToggle = true, bw = 255, zoomVal = 1.004;
 		let gui, cp, cpRandom, splat, zoom, zoomLabel, rot, rotLabel, res, resLabel, saveBtn, aboutBtn, clearBtn;
 
 
@@ -198,11 +198,10 @@
 		}
 
 		function draw() {
-			pixelDensity(map(res.value(), .01, 1.0, .01, displayDensity()))
 			push();
 			translate(width / 2, height / 2)
 			rotate(radians(rot.value()))
-			image(fb, 0, 0, width * zoom.value(), height * zoom.value())
+			image(fb, 0, 0, width * zoomVal, height * zoomVal)
 			pop()
 			if(clearToggle){
 				background(0);
@@ -220,9 +219,13 @@
 			for(let d of drops) {
 				d.display();
 			}
-			scl = map(res.value(), .01, 1.0, .01, 1);
 			fb = get(0, 0, width, height)
 			fb.resize(width * scl, height * scl)
+		}
+
+		function updateRes(){
+			pixelDensity(map(res.value(), .01, 1.0, .01, displayDensity()))
+			scl = map(res.value(), .01, 1.0, .01, 1);
 		}
 
 		function genGUI(){
@@ -244,7 +247,7 @@
 			let sec2 = createDiv('').class('gui-section').parent(gui);
 			let zoomDiv = createDiv('').parent(sec2).size(w, h).class('gui');
 			zoom = createSlider(.97, 1.03, 1.004, .001).parent(zoomDiv).class('gui sliders');
-			zoom.input(function(){zoomLabel.html('ZOOM - '+this.value())})
+			zoom.input(function(){zoomVal = zoom.value();zoomLabel.html('ZOOM - '+this.value())})
 			zoom.size(w, 5);
 			zoomLabel = createDiv('ZOOM - ' + zoom.value()).parent(zoomDiv).size(w, h).class('label');
 
@@ -256,7 +259,7 @@
 
 			let resDiv = createDiv('').parent(sec2).size(w, h).class('gui');
 			res = createSlider(.01, 1, .5, .01).parent(resDiv).class('gui sliders');
-			res.input(function(){resLabel.html('RESOLUTION - '+this.value())})
+			res.input(function(){updateRes();resLabel.html('RESOLUTION - '+this.value())})
 			res.size(w, 5);
 			resLabel = createDiv('RESOLUTION - '+res.value()).size(w, h).parent(resDiv).class('label');
 			
