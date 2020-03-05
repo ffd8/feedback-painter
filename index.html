@@ -266,7 +266,7 @@
 
 			let resDiv = createDiv('').parent(sec2).size(w, h).class('gui');
 			res = createSlider(.01, 1, .5, .01).parent(resDiv).class('gui sliders');
-			res.changed(function(){updateRes();resLabel.html('RESOLUTION - '+this.value())})
+			res.input(function(){updateRes();resLabel.html('RESOLUTION - '+this.value())})
 			res.size(w, 5);
 			resLabel = createDiv('RESOLUTION - '+res.value()).size(w, h).parent(resDiv).class('label');
 			
