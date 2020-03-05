@@ -24,6 +24,13 @@
 			overflow:hidden;
 			background:#000;
 			cursor:crosshair;
+			-webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Opera and Firefox */
 		}
 		div{
 			box-sizing: border-box;
@@ -224,7 +231,7 @@
 		}
 
 		function updateRes(){
-			pixelDensity(map(res.value(), .01, 1.0, .01, displayDensity()))
+			pixelDensity(nf(map(res.value(), .01, 1.0, .01, displayDensity())), 2, 1);
 			scl = map(res.value(), .01, 1.0, .01, 1);
 		}
 
@@ -259,7 +266,7 @@
 
 			let resDiv = createDiv('').parent(sec2).size(w, h).class('gui');
 			res = createSlider(.01, 1, .5, .01).parent(resDiv).class('gui sliders');
-			res.input(function(){updateRes();resLabel.html('RESOLUTION - '+this.value())})
+			res.changed(function(){updateRes();resLabel.html('RESOLUTION - '+this.value())})
 			res.size(w, 5);
 			resLabel = createDiv('RESOLUTION - '+res.value()).size(w, h).parent(resDiv).class('label');
 			
