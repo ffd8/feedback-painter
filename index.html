@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>feedback-painter</title>
+	<!-- Compiled w/ P5LIVE, http://github.com/ffd8/p5live -->
+	<script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.min.js"></script>
+	<style type="text/css">
+		:root {
+			--a: #fff;
+			--b: #000;
+		}
+		@font-face {
+			font-family: 'roboto_mono';
+			src: url('includes/fonts/robotomono-regular-webfont.woff2') format('woff2'),
+			url('includes/fonts/robotomono-regular-webfont.woff') format('woff');
+			font-weight: 400;
+			font-style: normal;
+		}
+		body{
+			font-family:'roboto_mono', monospace;
+			font-weight:400;
+			margin:0;
+			overflow:hidden;
+			background:#000;
+			cursor:crosshair;
+		}
+		div{
+			box-sizing: border-box;
+		}
+		canvas{
+			position:fixed;
+			top:0;
+			left:0;
+			z-index:-1;
+			width:100vw;
+			height:100vh;
+			margin:0;
+		}
+		#gui{
+			position:fixed;
+			width:100vw;
+			height:auto;
+		}
+		.gui-section{
+			float:left;
+			width:calc(100% / 3);
+		}
+		.gui{
+			float:left;
+			width:140px;
+			margin:5px;
+			box-sizing: border-box;
+		}
+		#cp{
+			-webkit-appearance: none;
+			outline:none;
+			border:none;
+			padding:0;
+			background:none;
+			border:1px solid #fff !important;
+			color:#fff;
+		}
+		input[type="color"]::-webkit-color-swatch-wrapper {
+			padding: 0;
+		}
+		input[type="color"]::-webkit-color-swatch {
+			border: none;
+		}
+		button{
+			outline:none;
+			border:1px solid #fff;
+			color:#fff;
+			background:none;
+		}
+		button:hover{
+			background:#fff;
+			color:#000;
+			cursor:pointer;
+		}
+		.sliders {
+			margin-top:15px;
+			-webkit-appearance: none;
+			border-radius: 10px;  
+			background: var(--a);
+			height:1px;
+			border:1px solid var(--b);
+			outline: none;
+			cursor:pointer;
+		}
+
+		.sliders::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 15px;
+			height: 15px;
+			border:1px solid var(--a);
+			border-radius: 50%; 
+			background: var(--b);
+			cursor: pointer;
+		}
+
+		.sliders::-moz-range-thumb {
+			width: 15px;
+			height: 15px;
+			border-radius: 50%;
+			background: var(--b);
+			cursor: pointer;
+		}
+
+		.sliders::-webkit-slider-thumb:hover{
+			background:var(--a);
+			border:1px solid var(--b);
+		}
+		.label{
+			position:absolute;
+			color:#fff;
+			height:15px;
+			float:left;
+			font-size:8pt;
+			pointer-events: none;
+		}
+		#info{
+			display:none;
+			position:fixed;
+			left:10vw;
+			top:25vh;
+			z-index:999;
+			width:80vw;
+			height:auto;
+			max-height:70vh;
+			overflow-y:auto;
+			color:#fff;
+			border:1px solid #fff;
+			font-size:10pt;
+			padding:15px;
+		}
+		#info-close{
+			position:absolute;
+			right:0px;
+			top:0px;
+			font-size:32pt;
+			padding:0 5px 0 5px;
+			cursor:pointer;
+		}
+		#info-close:hover{
+			background:#fff;
+			color:#000;
+		}
+		#info a{
+			color:#fff;
+		}
+		#info-bg{
+			position:absolute;
+			z-index:-1;
+			left:0;
+			top:0;
+			width:100%;
+			height:100%;
+			background:#000;
+			opacity: .5;
+		}
+		.info-button{
+			/*border:1px dotted #888;*/
+			padding:0px;
+			background:#fff;
+			color:#000;
+			/*margin:1px;*/
+		}
+		.info-slider{
+			border-bottom:1px dotted #fff;
+		}
+	</style>
+	<script type="text/javascript">
+		// eco-mode = only render if window focused
+		window.onblur = function () {
+			noLoop()
+		}
+		window.onfocus = function () {
+			loop();
+		}
+	</script>
+	<script type="text/javascript">
+		//feedback-painter
+		// cc teddavis.org 2020
+
+		let fb, drops = [],
+		scl = .09, splatter = false, clearToggle = false, guiToggle = true, bw = 255;
+		let gui, cp, cpRandom, splat, zoom, zoomLabel, rot, rotLabel, res, resLabel, saveBtn, aboutBtn, clearBtn;
+
+
+		function setup() {
+			createCanvas(windowWidth, windowHeight);
+			fb = createImage(width, height);
+			imageMode(CENTER)
+			genGUI();
+			background(0);
+		}
+
+		function draw() {
+			pixelDensity(map(res.value(), .01, 1.0, .01, displayDensity()))
+			push();
+			translate(width / 2, height / 2)
+			rotate(radians(rot.value()))
+			image(fb, 0, 0, width * zoom.value(), height * zoom.value())
+			pop()
+			if(clearToggle){
+				background(0);
+				clearToggle= false;
+			}
+
+			if(mouseIsPressed && mouseY > document.getElementById('gui').offsetHeight) {
+				drops.push(new Drop(mouseX, mouseY))
+			}
+			
+			if(splatter){
+				drops.push(new Drop(random(width), random(height)));
+			}
+
+			for(let d of drops) {
+				d.display();
+			}
+			scl = map(res.value(), .01, 1.0, .01, 1);
+			fb = get(0, 0, width, height)
+			fb.resize(width * scl, height * scl)
+		}
+
+		function genGUI(){
+			let x = 5, y = 5, w = 140, h = 30, b = 15;
+			gui = createDiv('').id('gui');
+			let sec1 = createDiv('').class('gui-section').parent(gui);
+			cp = createColorPicker(genColor()).parent(sec1).class('gui').id('cp');
+			cp.size(w, h);
+			cpRandom = createButton('RANDOM COLOR').parent(sec1).class('gui');
+			cpRandom.size(w, h);
+			cpRandom.mousePressed(function() {
+				cp.value(genColor());
+			});
+
+			splat = createButton('SPLATTER').parent(sec1).class('gui');
+			splat.mousePressed(() => splatter = true).mouseReleased(() => splatter = false);
+			splat.size(w, h);
+
+			let sec2 = createDiv('').class('gui-section').parent(gui);
+			let zoomDiv = createDiv('').parent(sec2).size(w, h).class('gui');
+			zoom = createSlider(.97, 1.03, 1.004, .001).parent(zoomDiv).class('gui sliders');
+			zoom.input(function(){zoomLabel.html('ZOOM - '+this.value())})
+			zoom.size(w, 5);
+			zoomLabel = createDiv('ZOOM - ' + zoom.value()).parent(zoomDiv).size(w, h).class('label');
+
+			let rotDiv = createDiv('').parent(sec2).size(w, h).class('gui');
+			rot = createSlider(-5, 5, 0, .1).parent(rotDiv).class('gui sliders');
+			rot.input(function(){rotLabel.html('ROTATE - '+this.value())})
+			rot.size(w, 5)
+			rotLabel = createDiv('ROTATE - '+rot.value()).size(w, h).parent(rotDiv).class('label');
+
+			let resDiv = createDiv('').parent(sec2).size(w, h).class('gui');
+			res = createSlider(.01, 1, .5, .01).parent(resDiv).class('gui sliders');
+			res.input(function(){resLabel.html('RESOLUTION - '+this.value())})
+			res.size(w, 5);
+			resLabel = createDiv('RESOLUTION - '+res.value()).size(w, h).parent(resDiv).class('label');
+			
+			let sec3 = createDiv('').class('gui-section').parent(gui);
+			clearBtn = createButton('CLEAR').parent(sec3).class('gui');
+			clearBtn.mousePressed(function(){
+				clearToggle = true;
+			});
+			clearBtn.size(w, h);
+			
+			saveBtn = createButton('EXPORT').parent(sec3).class('gui');
+			saveBtn.mousePressed(function(){
+				exportFrame();
+			});
+			saveBtn.size(w, h);
+			
+			aboutBtn = createButton('FEEDBACK-PAINTER').parent(sec3).class('gui');
+			aboutBtn.mousePressed(function(){
+				toggleInfo();
+			});
+			aboutBtn.size(w, h);
+		}
+
+		function genColor(){
+			return '#' + fullColorHex(floor(random(255)), floor(random(255)), floor(random(255)));
+		}
+
+		function genGrayscale(){
+			let gray = floor(random(255));
+			return '#' + fullColorHex(gray, gray, gray);
+		}
+
+		function genBW(){
+			if(bw == 255){
+				bw = 0;
+			}else{
+				bw = 255;
+			}
+			return '#' + fullColorHex(bw, bw, bw);
+		}
+
+		function fullColorHex (r, g, b) {
+			let red = rgbToHex(r);
+			let green = rgbToHex(g);
+			let blue = rgbToHex(b);
+			return red + green + blue;
+		};
+
+		function rgbToHex (rgb) {
+			let hex = Number(rgb).toString(16);
+			if(hex.length < 2) {
+				hex = "0" + hex;
+			}
+			return hex;
+		};
+
+		function exportFrame(){
+			let timestamp = (new Date()).toISOString().replace(/[^0-9]/g, '').slice(0, -3); 
+			let filename = 'feedback-painting_' + timestamp + '.png'; 
+			save(filename);
+		}
+
+		function keyPressed(){
+			if(key == 'c'){
+				cp.value(genColor());
+			}
+			if(key == 'g'){
+				cp.value(genGrayscale());
+			}
+			if(key == 'b'){
+				cp.value(genBW());
+			}
+			if(key == 's'){
+				splatter = true;
+			}
+			if(keyCode == 8){
+				clearToggle = true;
+			}
+			if(key == 'm'){
+				toggleGUI();
+			}
+			if(key == 'e'){
+				exportFrame();
+			}
+			if(key == 'i'){
+				toggleInfo()
+			}
+		}
+
+		function keyReleased(){
+			if(key == 's'){
+				splatter = false;
+			}
+		}
+
+		function toggleInfo(){
+			if(document.getElementById('info').style.display == 'block'){
+				document.getElementById('info').style.display = 'none';
+			}else{
+				document.getElementById('info').style.display = 'block'
+			}
+		}
+
+		function toggleGUI(){
+			guiToggle = !guiToggle;
+			if(guiToggle){
+				document.getElementById('gui').style.display = 'block';
+			}else{
+				document.getElementById('gui').style.display = 'none';
+			}
+		}
+
+		class Drop {
+			constructor(x, y) {
+				this.pos = createVector(x, y, 0)
+				this.id = drops.length;
+				this.color = cp.color(); //color(random(255), random(255));
+				this.max = random(10, 100)
+			}
+
+			display() {
+				this.pos.z += 5;
+				if(this.pos.z > this.max) {
+					drops = drops.splice(1);
+				}
+				noStroke();
+				fill(this.color);
+				circle(this.pos.x, this.pos.y, this.pos.z);
+			}
+		}
+
+		/* CUSTOM FUNCTIONS FOR P5LIVE */
+		// keep fullscreen if window resized
+		function windowResized() {
+			resizeCanvas(windowWidth, windowHeight);
+		}
+</script>
+
+</head>
+<body>
+	<div id="info">
+		<div id="info-bg"></div>
+		<a onclick="toggleInfo();"><div id="info-close">X</div></a>
+		feedback-painter<br>
+		cc <a href="https://teddavis.org" target="_blank">teddavis.org</a> 2020<hr>
+		<a href="https://p5js.org" target="_blank">p5.js</a> tool, sharing my love for visual feedback.<br>
+		wild artifacts and aberrations occur when rendering low-res.<hr>
+		guide:<br>
+		- select colors or pick a <span class="info-button">random color</span><br>
+		- draw with the mouse pressed, +/- add <span class="info-button">splatter</span><br><br>
+		- <span class="info-slider">zoom</span>, controls feedback in or out<br>
+		- <span class="info-slider">rotate</span>, spins feedback left or right<br>
+		- <span class="info-slider">resolution</span>, controls size of canvas (1/4 to full display density)<br><br>
+		- <span class="info-button">clear</span> » the image<br> 
+		- <span class="info-button">export</span> » saves transparent png (size is based on resolution)<br>
+		- <span class="info-button">feedback-painter</span> » this info.. hi!
+		<hr>
+		shortcuts:<br>
+		- [ m ] » toggle menu<br>
+		- [ i ] » toggle info<br>
+		- [ s ] » splatter<br>
+		- [ c ] » random color<br>
+		- [ g ] » random grayscale<br>
+		- [ b ] » toggle b/w<br>
+		- [ e ] » export
+		- [ delete ] » clear
+	</div>
+
+	<script type="text/javascript">
+		document.getElementById('info').style.display = 'block';
+	</script>
+</body>
+</html>
