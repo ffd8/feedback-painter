@@ -25,12 +25,12 @@
 			background:#000;
 			cursor:crosshair;
 			-webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome, Opera and Firefox */
+	    -webkit-user-select: none; /* Safari */
+	     -khtml-user-select: none; /* Konqueror HTML */
+	       -moz-user-select: none; /* Old versions of Firefox */
+	        -ms-user-select: none; /* Internet Explorer/Edge */
+	            user-select: none; /* Non-prefixed version, currently
+	                                  supported by Chrome, Opera and Firefox */
 		}
 		div{
 			box-sizing: border-box;
@@ -44,6 +44,8 @@
 			height:100vh;
 			margin:0;
 		}
+
+		/* GUI */
 		#gui{
 			position:fixed;
 			width:100vw;
@@ -58,6 +60,9 @@
 			width:140px;
 			margin:5px;
 			box-sizing: border-box;
+		}
+		.export{
+			border:none;
 		}
 		#cp{
 			-webkit-appearance: none;
@@ -88,7 +93,7 @@
 		.sliders {
 			margin-top:15px;
 			-webkit-appearance: none;
-			border-radius: 10px;  
+			border-radius: 10px;
 			background: var(--a);
 			height:1px;
 			border:1px solid var(--b);
@@ -102,7 +107,7 @@
 			width: 15px;
 			height: 15px;
 			border:1px solid var(--a);
-			border-radius: 50%; 
+			border-radius: 50%;
 			background: var(--b);
 			cursor: pointer;
 		}
@@ -127,7 +132,9 @@
 			font-size:8pt;
 			pointer-events: none;
 		}
-		#info{
+
+		/* INFO */
+		.info{
 			display:none;
 			position:fixed;
 			left:10vw;
@@ -141,23 +148,25 @@
 			border:1px solid #fff;
 			font-size:10pt;
 			padding:15px;
+			line-height:1.6em;
 		}
-		#info-close{
+		.info-close{
 			position:absolute;
 			right:0px;
 			top:0px;
 			font-size:32pt;
 			padding:0 5px 0 5px;
 			cursor:pointer;
+			line-height:1.4em;
 		}
-		#info-close:hover{
+		.info-close:hover{
 			background:#fff;
 			color:#000;
 		}
-		#info a{
+		.info a{
 			color:#fff;
 		}
-		#info-bg{
+		.info-bg{
 			position:absolute;
 			z-index:-1;
 			left:0;
@@ -168,14 +177,76 @@
 			opacity: .5;
 		}
 		.info-button{
-			/*border:1px dotted #888;*/
-			padding:0px;
-			background:#fff;
-			color:#000;
+			border:1px dotted #888;
+			padding:0px 5px 0px 5px;
+			/*background:#fff;*/
+			color:#fff;
 			/*margin:1px;*/
+			text-transform: uppercase;
 		}
 		.info-slider{
 			border-bottom:1px dotted #fff;
+			text-transform: uppercase;
+		}
+
+		/* VIDEO */
+		#video{
+			/*display:block;*/
+		}
+
+		.info-input{
+			border:none;
+			border-left: 1px solid #42f5e9;
+			outline:none;
+			background:none;
+			color: #42f5e9;
+			/*color:#fff;*/
+			font-size:10pt;
+			padding:5px;
+			width:50%;
+		}
+		#video button{
+			width:130px;
+			height:30px;
+		}
+		.video-gui{
+			height:40px;
+		}
+		.video-holder{
+			position:relative;
+			width:100%;
+			height:50vh;
+			margin-top:5px;
+		}
+		#video video{
+			position: absolute;
+			box-sizing: border-box;
+			border:1px solid #fff;
+			outline:none;
+		    left: 0;
+		    top: 0;
+		    max-width: 100%;
+		    max-height: 100%;
+		    width: auto;
+		    height: auto;
+		    /*z-index: -100;*/
+		    background-size: cover;
+		    overflow: hidden;
+		}
+		.icon-stop{
+			color:#ff0000;
+			animation: pulse 1.5s infinite;
+		}
+		@keyframes pulse {
+		  0% {
+		    opacity: 0.25;
+		  }
+		  50% {
+		    opacity: 1.0;
+		  }
+		  100% {
+		    opacity: 0.25;
+		  }
 		}
 	</style>
 	<script type="text/javascript">
@@ -193,7 +264,11 @@
 
 		let fb, drops = [],
 		scl = .09, splatter = false, clearToggle = false, guiToggle = true, bw = 255, zoomVal = 1.004;
-		let gui, cp, cpRandom, splat, zoom, zoomLabel, rot, rotLabel, res, resLabel, saveBtn, aboutBtn, clearBtn;
+		let gui, cp, cpRandom, splat, zoom, zoomLabel, rot, rotLabel, res, resLabel, videoBtn, saveBtn, aboutBtn, clearBtn;
+
+		let iconVideo = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-video"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>';
+
+		let iconStop = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-stop feather feather-stop-circle"><circle cx="12" cy="12" r="10"></circle><rect x="9" y="9" width="6" height="6"></rect></svg>';
 
 
 		function setup() {
@@ -202,6 +277,7 @@
 			imageMode(CENTER)
 			genGUI();
 			background(0);
+			prepRecorder();
 		}
 
 		function draw() {
@@ -215,10 +291,10 @@
 				clearToggle= false;
 			}
 
-			if(mouseIsPressed && mouseY > document.getElementById('gui').offsetHeight) {
+			if(mouseIsPressed && mouseY > document.getElementById('gui').offsetHeight && !videoDisplay) {
 				drops.push(new Drop(mouseX, mouseY))
 			}
-			
+
 			if(splatter){
 				drops.push(new Drop(random(width), random(height)));
 			}
@@ -269,20 +345,25 @@
 			res.input(function(){updateRes();resLabel.html('RESOLUTION - '+this.value())})
 			res.size(w, 5);
 			resLabel = createDiv('RESOLUTION - '+res.value()).size(w, h).parent(resDiv).class('label');
-			
+
 			let sec3 = createDiv('').class('gui-section').parent(gui);
+
+			videoBtn = createButton(iconVideo).parent(sec3).class('gui export').id('record');
+
+			videoBtn.size(w/3, h);
+
+			saveBtn = createButton('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-image"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>').parent(sec3).class('gui export');
+			saveBtn.mousePressed(function(){
+				exportFrame();
+			});
+			saveBtn.size(w/3, h);
+
 			clearBtn = createButton('CLEAR').parent(sec3).class('gui');
 			clearBtn.mousePressed(function(){
 				clearToggle = true;
 			});
 			clearBtn.size(w, h);
-			
-			saveBtn = createButton('EXPORT').parent(sec3).class('gui');
-			saveBtn.mousePressed(function(){
-				exportFrame();
-			});
-			saveBtn.size(w, h);
-			
+
 			aboutBtn = createButton('FEEDBACK-PAINTER').parent(sec3).class('gui');
 			aboutBtn.mousePressed(function(){
 				toggleInfo();
@@ -324,8 +405,8 @@
 		};
 
 		function exportFrame(){
-			let timestamp = (new Date()).toISOString().replace(/[^0-9]/g, '').slice(0, -3); 
-			let filename = 'feedback-painting_' + timestamp + '.png'; 
+			let timestamp = (new Date()).toISOString().replace(/[^0-9]/g, '').slice(0, -3);
+			let filename = 'feedback-painting_' + timestamp + '.png';
 			save(filename);
 		}
 
@@ -362,11 +443,21 @@
 			}
 		}
 
-		function toggleInfo(){
-			if(document.getElementById('info').style.display == 'block'){
+		function toggleInfo(force){
+			if(document.getElementById('info').style.display == 'block' || (force != undefined && !force)){
 				document.getElementById('info').style.display = 'none';
 			}else{
 				document.getElementById('info').style.display = 'block'
+			}
+		}
+
+		function toggleVideo(force){
+			if(document.getElementById('video').style.display == 'block' || (force != undefined && !force)){
+				document.getElementById('video').style.display = 'none';
+				videoDisplay = false;
+			}else{
+				document.getElementById('video').style.display = 'block';
+				videoDisplay = true;
 			}
 		}
 
@@ -407,9 +498,9 @@
 
 </head>
 <body>
-	<div id="info">
-		<div id="info-bg"></div>
-		<a onclick="toggleInfo();"><div id="info-close">X</div></a>
+	<div class="info" id="info">
+		<div class="info-bg"></div>
+		<a onclick="toggleInfo();"><div class="info-close">X</div></a>
 		feedback-painter<br>
 		cc <a href="https://teddavis.org" target="_blank">teddavis.org</a> 2020<hr>
 		<a href="https://p5js.org" target="_blank">p5.js</a> tool, sharing my love for visual feedback.<br>
@@ -420,7 +511,7 @@
 		- <span class="info-slider">zoom</span>, controls feedback in or out<br>
 		- <span class="info-slider">rotate</span>, spins feedback left or right<br>
 		- <span class="info-slider">resolution</span>, controls size of canvas (1/4 to full display density)<br><br>
-		- <span class="info-button">clear</span> » the image<br> 
+		- <span class="info-button">clear</span> » the image<br>
 		- <span class="info-button">export</span> » saves transparent png (size is based on resolution)<br>
 		- <span class="info-button">feedback-painter</span> » this info.. hi!
 		<hr>
@@ -433,10 +524,164 @@
 		- [ b ] » toggle b/w<br>
 		- [ e ] » export
 		- [ delete ] » clear
+		<hr>
+		video: <br>
+		saved videos are .webm format. easily convert to an .mov using <a href="https://ffd8.github.io/cli-for-artists-and-designers/" target="_blank">FFMPEG</a>. <br>- Type 'ffmpeg -i' + spacebar, then drag + drop  webm file, <br>- type '-c copy' + spacebar, and drag and drop the file again, changing the suffix to mov:<br><input class="info-input" type="text" name="" onclick="this.select();" value="ffmpeg -i drag_inputfile.webm -c copy drag_inputfile.mov">
+	</div>
+	<div class="info" id="video">
+		<div class="info-bg"></div>
+		<a onclick="toggleVideo(false);"><div class="info-close">X</div></a>
+		<div class="video-gui">
+			<button id="play" disabled>Play</button>
+        	<button id="download" disabled>Download</button>
+		</div>
+        <div class="video-holder">
+        	<video></video>
+        </div>
 	</div>
 
 	<script type="text/javascript">
 		document.getElementById('info').style.display = 'block';
 	</script>
+	<script type="text/javascript">
+		// recording
+		'use strict';
+
+		/* globals main */
+
+		// This code is adapted from
+		// https://rawgit.com/Miguelao/demos/master/mediarecorder.html
+
+		/* globals main, MediaRecorder */
+
+		const mediaSource = new MediaSource();
+		mediaSource.addEventListener('sourceopen', handleSourceOpen, false);
+		let mediaRecorder, recordedBlobs, sourceBuffer;
+		let recordButton, recording = false;
+		const playButton = document.querySelector('button#play');
+		const downloadButton = document.querySelector('button#download');
+		let canvas, video, stream, videoDisplay = false;
+		let debugVideo = false;
+		// var types = [
+		// 	"video/webm",
+		// 	"audio/webm",
+		// 	"video/webm\;codecs=vp8",
+		// 	"video/webm\;codecs=daala",
+		// 	"video/webm\;codecs=h264",
+		// 	"audio/webm\;codecs=opus",
+		// 	"video/mpeg"
+		// ];
+
+		// for (var i in types) {
+		// 	console.log( types[i] + " - " + (MediaRecorder.isTypeSupported(types[i]) ? "√" : "X"));
+		// }
+
+		function prepRecorder(){
+			recordButton = document.querySelector('button#record');
+			recordButton.onclick = toggleRecording;
+			canvas = document.querySelector('canvas');
+			video = document.querySelector('video');
+			stream = canvas.captureStream(); // frames per second
+		}
+
+		playButton.onclick = play;
+		downloadButton.onclick = download;
+
+		function handleSourceOpen(event) {
+			if(debugVideo){console.log('MediaSource opened');}
+			sourceBuffer = mediaSource.addSourceBuffer('video/webm; codecs="h264"');
+			if(debugVideo){console.log('Source buffer: ', sourceBuffer);}
+		}
+
+		function handleDataAvailable(event) {
+			if (event.data && event.data.size > 0) {
+				recordedBlobs.push(event.data);
+			}
+		}
+
+		function handleStop(event) {
+			if(debugVideo){console.log('Recorder stopped: ', event);}
+			const superBuffer = new Blob(recordedBlobs, {type: 'video/webm'}); // video/webm
+			video.src = window.URL.createObjectURL(superBuffer);
+		}
+
+		function toggleRecording() {
+			if (!recording) {
+				recording = true;
+				startRecording();
+			} else {
+				stopRecording();
+				recording = false;
+				recordButton.innerHTML = iconVideo;
+				playButton.disabled = false;
+				downloadButton.disabled = false;
+			}
+		}
+
+		// The nested try blocks will be simplified when Chrome 47 moves to Stable
+		function startRecording() {
+			let options = {mimeType: 'video/webm;codecs=h264'};
+			recordedBlobs = [];
+			try {
+				mediaRecorder = new MediaRecorder(stream, options);
+			} catch (e0) {
+					if(debugVideo){console.log('Unable to create MediaRecorder with options Object: ', e0);}
+					try {
+						options = {mimeType: 'video/webm,codecs=vp9'};
+						mediaRecorder = new MediaRecorder(stream, options);
+					} catch (e1) {
+						if(debugVideo){console.log('Unable to create MediaRecorder with options Object: ', e1);}
+						try {
+							options = 'video/vp8'; // Chrome 47
+							mediaRecorder = new MediaRecorder(stream, options);
+						} catch (e2) {
+							alert('MediaRecorder is not supported by this browser.\n\n' +
+							'Try Firefox 29 or later, or Chrome 47 or later, ' +
+							'with Enable experimental Web Platform features enabled from chrome://flags.');
+							console.error('Exception while creating MediaRecorder:', e2);
+							return;
+					}
+				}
+			}
+			if(debugVideo){console.log('Created MediaRecorder', mediaRecorder, 'with options', options);}
+			toggleVideo(false);
+			recordButton.innerHTML = iconStop;
+			playButton.disabled = true;
+			downloadButton.disabled = true;
+			mediaRecorder.onstop = handleStop;
+			mediaRecorder.ondataavailable = handleDataAvailable;
+			mediaRecorder.start(100); // collect 100ms of data
+			if(debugVideo){console.log('MediaRecorder started', mediaRecorder);}
+		}
+
+		function stopRecording() {
+			mediaRecorder.stop();
+			toggleVideo(true);
+			if(debugVideo){console.log('Recorded Blobs: ', recordedBlobs);}
+			video.controls = true;
+		}
+
+		function play() {
+			video.play();
+		}
+
+		function download() {
+			const blob = new Blob(recordedBlobs, {type: 'video/webm'}); // video/webm
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.style.display = 'none';
+			a.href = url;
+			let filename = 'feedback_painter_' +(new Date()).toISOString().replace(/[^0-9]/g, '').slice(0, -3)+ '.webm'
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(() => {
+				document.body.removeChild(a);
+				window.URL.revokeObjectURL(url);
+			}, 100);
+		}
+	</script>
+
+
 </body>
 </html>
