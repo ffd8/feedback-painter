@@ -1,4 +1,4 @@
-#feedback-painter
+# feedback-painter
 cc [teddavis.org](https://teddavis.org) 2020
 
 -----
@@ -8,7 +8,7 @@ wild artifacts and aberrations occur when rendering low-res.
 [https://feedback-painter.glitch.me](https://feedback-painter.glitch.me)
 
 ----
-###guide:  
+### guide:  
 - select colors or pick a `random color`  
 - draw with the mouse pressed, +/- add `splatter`  
 - `zoom`, controls feedback in or out  
@@ -19,7 +19,7 @@ wild artifacts and aberrations occur when rendering low-res.
 - `feedback-painter` » this info.. hi!
 
 ----
-###shortcuts:  
+### shortcuts:  
 - [ m ] » toggle menu  
 - [ i ] » toggle info  
 - [ s ] » splatter  
@@ -30,3 +30,8 @@ wild artifacts and aberrations occur when rendering low-res.
 - [ delete ] » clear  
 
 -----
+### videos
+saved videos are .webm format. easily convert to an .mov using [FFMPEG](https://ffd8.github.io/cli-for-artists-and-designers/).  
+- type 'ffmpeg -i' + spacebar, then drag + drop  webm file,   
+- type '-c copy' + spacebar, and drag and drop the file again, changing the suffix to mov:  
+`ffmpeg -i drag_inputfile.webm -c copy drag_inputfile.mov`
